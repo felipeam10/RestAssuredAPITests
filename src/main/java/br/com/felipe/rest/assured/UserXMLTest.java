@@ -8,20 +8,50 @@ import java.util.ArrayList;
 import org.hamcrest.Matchers;
 import org.hamcrest.collection.HasItemInArray;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.filter.log.LogDetail;
 import io.restassured.internal.path.xml.NodeImpl;
+import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
 
 
 public class UserXMLTest {
+	
+	public static RequestSpecification reqSpec;
+	public static ResponseSpecification respSpec;
+	
+	@BeforeClass
+	public static void setup() {
+		RestAssured.baseURI = "https://restapi.wcaquino.me";
+//		RestAssured.port = 80; // não eh necessário http = 80 e https = 443
+//		RestAssured.basePath = "/v2";
+		
+		RequestSpecBuilder reqBuilder = new RequestSpecBuilder();
+		reqBuilder.log(LogDetail.ALL);
+		reqSpec = reqBuilder.build();
+		
+		ResponseSpecBuilder respBuilder = new ResponseSpecBuilder();
+		respBuilder.expectStatusCode(200);
+		respSpec = respBuilder.build();
+		
+		RestAssured.requestSpecification = reqSpec;
+		RestAssured.responseSpecification = respSpec;
+	}
 
 	@Test
 	public void deveTrabalharComXML() {
 		given()
+//			.spec(reqSpec)
 		.when()
-			.get("http://restapi.wcaquino.me/usersXML/3")
+			.get("/usersXML/3")
 		.then()
-			.statusCode(200)
+//			.statusCode(200)
+//			.spec(respSpec)
 			
 			.rootPath("user") //"user.filhos.name" passa a considerar "filhos.name" ou seja, diminui o caminho na string 
 			.body("name", is("Ana Julia"))
@@ -44,10 +74,12 @@ public class UserXMLTest {
 	@Test
 	public void deveFazerPesquisasAvancadasComXML() {
 		given()
+//			.spec(reqSpec)
 		.when()
-			.get("http://restapi.wcaquino.me/usersXML")
+			.get("/usersXML")
 		.then()
-			.statusCode(200)
+//			.statusCode(200)
+//			.spec(respSpec)
 			.body("users.user.size()", is(3))
 			.body("users.user.findAll{it.age.toInteger() <= 25}.size()", is(2))
 			.body("users.user.@id", hasItems("1", "2", "3"))
@@ -65,10 +97,12 @@ public class UserXMLTest {
 	@Test		// Unindo XMLPath com Java
 	public void deveFazerPesquisasAvancadasComXML2() {
 		ArrayList<NodeImpl> nomes = given()
+//			.spec(reqSpec)
 		.when()
-			.get("http://restapi.wcaquino.me/usersXML")
+			.get("/usersXML")
 		.then()
-			.statusCode(200)
+//			.statusCode(200)
+//			.spec(respSpec)
 			.extract().path("users.user.name.findAll{it.toString().contains('n')}")
 		;
 		Assert.assertEquals(2, nomes.size());
@@ -81,10 +115,12 @@ public class UserXMLTest {
 				// https://www.red-gate.com/simple-talk/dotnet/net-framework/xpath-css-dom-and-selenium-the-rosetta-stone/
 				// os metodos do xPath se encontram no link acima 
 				given()
+//					.spec(reqSpec)
 				.when()
-					.get("http://restapi.wcaquino.me/usersXML")
+					.get("/usersXML")
 				.then()
-					.statusCode(200)
+//					.statusCode(200)
+//					.spec(respSpec)
 					.body(hasXPath("count(/users/user)", is("3")))
 					.body(hasXPath("/users/user[@id = '1']"))
 					.body(hasXPath("//user[@id = '2']"))
